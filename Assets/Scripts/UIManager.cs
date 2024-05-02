@@ -7,6 +7,8 @@ public class UIManager : MonoBehaviour
     [SerializeField]
     private CanvasGroup loadingScreenPanel, signupPanel, loginPanel;
 
+    public TMP_InputField firstName, lastName, phone;
+
     [SerializeField]
     private CanvasGroup mainAppPanel, restaurantListPanel, makeReservationPanel;
 
@@ -169,8 +171,6 @@ public class UIManager : MonoBehaviour
             reservationInfoPanel.interactable = false;
         }
     }
-
-
 
     private IEnumerator FadeInOut(CanvasGroup canvasGroup, float endValue ) 
     {
