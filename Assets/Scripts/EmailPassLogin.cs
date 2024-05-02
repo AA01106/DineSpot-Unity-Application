@@ -1,37 +1,28 @@
-using System.Collections;
-using UnityEngine;
-using TMPro;
 using Firebase.Extensions;
+using System.Collections;
 using Firebase.Auth;
+using UnityEngine;
 using Firebase;
+
+
 
 public class EmailPassLogin : MonoBehaviour
 {
-    #region variables
-    [Header("Login")]
-    public TMP_InputField LoginEmail;
-    public TMP_InputField loginPassword;
+    [SerializeField]
+    private UIManager UIManager;
 
-    [Header("Sign up")]
-    public TMP_InputField SignupEmail;
-    public TMP_InputField SignupPassword;
-
-
-    [Header("Extra")]
-    public GameObject loadingScreen;
-    public TextMeshProUGUI logTxt;
-    public GameObject loginUi, signupUi, SuccessUi;
-    #endregion
-
-    #region signup 
     public void SignUp()
     {
-        loadingScreen.SetActive(true);
+        UIManager.SetLoadingScreen(true);
 
         FirebaseAuth auth = FirebaseAuth.DefaultInstance;
-        string email = SignupEmail.text;
-        string password = SignupPassword.text;
+
+        string email = UIManager.SignupEmail.text;
+
+        string password = UIManager.SignupPassword.text;
+
         auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => {
+
             if (task.IsCanceled)
             {
                 Debug.LogError("CreateUserWithEmailAndPasswordAsync was canceled.");
@@ -42,25 +33,25 @@ public class EmailPassLogin : MonoBehaviour
                 Debug.LogError("CreateUserWithEmailAndPasswordAsync encountered an error: " + task.Exception);
                 return;
             }
+
             // Firebase user has been created.
 
-            loadingScreen.SetActive(false);
+            UIManager.SetLoadingScreen(false);
+
             AuthResult result = task.Result;
+
             Debug.LogFormat("Firebase user created successfully: {0} ({1})",
                 result.User.DisplayName, result.User.UserId);
 
-            SignupEmail.text = "";
-            SignupPassword.text = "";
+            UIManager.SetLogInPanel(true);
 
-            if (result.User.IsEmailVerified)
-            {
-                showLogMsg("Sign up Successful");
-            }
-            else
-            {
-                showLogMsg("Please verify your email!!");
-                SendEmailVerification();
-            }
+            UIManager.SetSignUpPanel(false);
+
+            UIManager.SignupEmail.text = "";
+
+            UIManager.SignupPassword.text = "";
+
+            //SendEmailVerification();
 
         });
     }
@@ -257,64 +248,73 @@ public class EmailPassLogin : MonoBehaviour
         }
     }
 
-
-    #endregion
-
-    #region Login
     public void Login()
     {
-        loadingScreen.SetActive(true);
+        UIManager.SetLoadingScreen(true);
 
         FirebaseAuth auth = FirebaseAuth.DefaultInstance;
-        string email = LoginEmail.text;
-        string password = loginPassword.text;
 
-        Credential credential =
-        EmailAuthProvider.GetCredential(email, password);
+        string email = UIManager.LoginEmail.text;
+
+        string password = UIManager.loginPassword.text;
+
+        Credential credential = EmailAuthProvider.GetCredential(email, password);
+
         auth.SignInAndRetrieveDataWithCredentialAsync(credential).ContinueWithOnMainThread(task => {
+
+            UIManager.SetLoadingScreen(false);
+
             if (task.IsCanceled)
             {
-                Debug.LogError("SignInAndRetrieveDataWithCredentialAsync was canceled.");
+                UIManager.errorText.text = "The login has been canceled";
+
                 return;
             }
+
             if (task.IsFaulted)
             {
-                Debug.LogError("SignInAndRetrieveDataWithCredentialAsync encountered an error: " + task.Exception);
+                UIManager.errorText.text = "You have entered an invalid username or password.";
+
                 return;
             }
-            loadingScreen.SetActive(false);
+
             AuthResult result = task.Result;
+
             Debug.LogFormat("User signed in successfully: {0} ({1})",
                 result.User.DisplayName, result.User.UserId);
 
-            if (result.User.IsEmailVerified)
-            {
-                showLogMsg("Log in Successful");
+            UIManager.SetMainAppPanel(true);
 
-                loginUi.SetActive(false);
-                SuccessUi.SetActive(true);
-                SuccessUi.transform.Find("Desc").GetComponent<TextMeshProUGUI>().text = "Id: " + result.User.UserId;
-            }
-            else
-            {
-                showLogMsg("Please verify email!!");
+            UIManager.SetLogInPanel(false);
 
-            }
+            UIManager.LoginEmail.text = "";
+
+            UIManager.loginPassword.text = "";
+
+            UIManager.errorText.text = "";
 
         });
-
-
-        Debug.Log(FirebaseAuth.DefaultInstance.CurrentUser.UserId);
-
     }
-    #endregion
 
-    #region extra
-    void showLogMsg(string msg)
+    public void Logout() 
     {
-        logTxt.text = msg;
-        logTxt.GetComponent<Animation>().Play("textFadeout");
-    }
-    #endregion
+        FirebaseAuth.DefaultInstance.SignOut();
 
+        StartCoroutine(LoadingScreenWithTime(2));
+
+        UIManager.SetMainAppPanel(false);
+
+        UIManager.SetLogInPanel(true);
+
+    }
+
+    IEnumerator LoadingScreenWithTime(int seconds) 
+    {
+        UIManager.SetLoadingScreen(true);
+
+        yield return new WaitForSeconds(seconds);
+
+        UIManager.SetLoadingScreen(false);
+
+    }
 }
