@@ -1,35 +1,93 @@
+using Michsky.UI.ModernUIPack;
 using System.Collections;
-using TMPro;
 using UnityEngine;
+using TMPro;
+
 
 public class UIManager : MonoBehaviour
 {
+
+    #region Fields
+
+    // Static instance of UI Manager class
+    public static UIManager Instance;
+
+    // Reference to each UI panel as a Canvas Group
+    #region Panels
+
     [SerializeField]
     private CanvasGroup loadingScreenPanel, signupPanel, loginPanel;
-
-    public TMP_InputField firstName, lastName, phone;
 
     [SerializeField]
     private CanvasGroup mainAppPanel, restaurantListPanel, makeReservationPanel;
 
     [SerializeField]
     private CanvasGroup accountInformationPanel, editReservationPanel, reservationInfoPanel;
+    #endregion
+
+    // Reference to all UI elements contained in the login panel
+    #region Login panel components
 
     [Header("Login")]
+
     public TMP_InputField LoginEmail;
 
     public TMP_InputField loginPassword;
 
-    public TMP_Text errorText;
+    public TMP_Text logText;
+
+    #endregion
+
+    // Reference to all UI elements contained in the sign up panel
+    #region SignUp panel components
 
     [Header("Sign up")]
-    public TMP_InputField SignupEmail;
 
-    public TMP_InputField SignupPassword;
+    public TMP_InputField signupEmail, signupPassword;
+
+    public TMP_InputField firstName, lastName, phone;
+
+    #endregion
+
+    // Reference to all UI elements contained in reservation list in account information window
+    #region User's reservations list
+
+    [Header("Reservations List")]
+
+    public Transform reservationList;
+
+    public GameObject reservtaionListItems;
+    #endregion
+
+    // Reference to all UI elements contained in make a reservation panel
+    #region Make a reservation panel UI components
+
+    [Header("Make a Reservation")]
+
+    public CustomDropdown TableNo;
+
+    public CustomDropdown Atendees;
+
+    public CustomDropdown Location;
+
+    public TMP_InputField month, day, hours, minutes;
+
+    public TMP_Text restaurantName;
+
+    #endregion
+
+    #endregion
+
+    #region Custom setters methods
+
+    //************************************
+    // Setters to Show/Hide each UI panel
+    //************************************
 
     public void SetLoadingScreen(bool State)
     {
-        if (State) {
+        if (State)
+        {
 
             loadingScreenPanel.alpha = 1f;
             loadingScreenPanel.blocksRaycasts = true;
@@ -76,7 +134,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SetMainAppPanel(bool State) 
+    public void SetMainAppPanel(bool State)
     {
         if (State)
         {
@@ -92,7 +150,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SetRestaurantListPanel(bool State) 
+    public void SetRestaurantListPanel(bool State)
     {
         if (State)
         {
@@ -108,7 +166,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SetMakeReservationPanel(bool State) 
+    public void SetMakeReservationPanel(bool State)
     {
         if (State)
         {
@@ -172,6 +230,15 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    #endregion
+
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    // Coroutine to increase/decrease the opcaity of specific canvas group
     private IEnumerator FadeInOut(CanvasGroup canvasGroup, float endValue ) 
     {
         while (Mathf.Abs(canvasGroup.alpha - endValue) >= 0.001) 
@@ -183,4 +250,5 @@ public class UIManager : MonoBehaviour
 
         canvasGroup.alpha = Mathf.Round(canvasGroup.alpha);
     }
+
 }

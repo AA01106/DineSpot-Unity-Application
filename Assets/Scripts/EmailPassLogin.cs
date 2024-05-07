@@ -4,22 +4,18 @@ using Firebase.Auth;
 using UnityEngine;
 using Firebase;
 
-
-
 public class EmailPassLogin : MonoBehaviour
 {
-    [SerializeField]
-    private UIManager UIManager;
 
     public void SignUp()
     {
-        UIManager.SetLoadingScreen(true);
+        UIManager.Instance.SetLoadingScreen(true);
 
         FirebaseAuth auth = FirebaseAuth.DefaultInstance;
 
-        string email = UIManager.SignupEmail.text;
+        string email = UIManager.Instance.signupEmail.text;
 
-        string password = UIManager.SignupPassword.text;
+        string password = UIManager.Instance.signupPassword.text;
 
         auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => {
 
@@ -36,22 +32,24 @@ public class EmailPassLogin : MonoBehaviour
 
             // Firebase user has been created.
 
-            UIManager.SetLoadingScreen(false);
+            UIManager.Instance.SetLoadingScreen(false);
 
             AuthResult result = task.Result;
 
             Debug.LogFormat("Firebase user created successfully: {0} ({1})",
                 result.User.DisplayName, result.User.UserId);
 
-            UIManager.SetLogInPanel(true);
+            UIManager.Instance.SetLogInPanel(true);
 
-            UIManager.SetSignUpPanel(false);
+            UIManager.Instance.SetSignUpPanel(false);
 
-            UIManager.SignupEmail.text = "";
+            UIManager.Instance.signupEmail.text = "";
 
-            UIManager.SignupPassword.text = "";
+            UIManager.Instance.signupPassword.text = "";
 
             //SendEmailVerification();
+
+            SyncUserData();
 
         });
     }
@@ -250,30 +248,30 @@ public class EmailPassLogin : MonoBehaviour
 
     public void Login()
     {
-        UIManager.SetLoadingScreen(true);
+        UIManager.Instance.SetLoadingScreen(true);
 
         FirebaseAuth auth = FirebaseAuth.DefaultInstance;
 
-        string email = UIManager.LoginEmail.text;
+        string email = UIManager.Instance.LoginEmail.text;
 
-        string password = UIManager.loginPassword.text;
+        string password = UIManager.Instance.loginPassword.text;
 
         Credential credential = EmailAuthProvider.GetCredential(email, password);
 
         auth.SignInAndRetrieveDataWithCredentialAsync(credential).ContinueWithOnMainThread(task => {
 
-            UIManager.SetLoadingScreen(false);
+            UIManager.Instance.SetLoadingScreen(false);
 
             if (task.IsCanceled)
             {
-                UIManager.errorText.text = "The login has been canceled";
+                UIManager.Instance.logText.text = "The login has been canceled";
 
                 return;
             }
 
             if (task.IsFaulted)
             {
-                UIManager.errorText.text = "You have entered an invalid username or password.";
+                UIManager.Instance.logText.text = "You have entered an invalid username or password.";
 
                 return;
             }
@@ -283,17 +281,38 @@ public class EmailPassLogin : MonoBehaviour
             Debug.LogFormat("User signed in successfully: {0} ({1})",
                 result.User.DisplayName, result.User.UserId);
 
-            UIManager.SetMainAppPanel(true);
+            UIManager.Instance.SetMainAppPanel(true);
 
-            UIManager.SetLogInPanel(false);
+            UIManager.Instance.SetLogInPanel(false);
 
-            UIManager.LoginEmail.text = "";
+            UIManager.Instance.LoginEmail.text = "";
 
-            UIManager.loginPassword.text = "";
+            UIManager.Instance.loginPassword.text = "";
 
-            UIManager.errorText.text = "";
+            UIManager.Instance.logText.text = "";
 
         });
+    }
+
+    public void SyncUserData() {
+
+        User newUser = new User();
+
+        string userID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+
+        newUser.firstName = UIManager.Instance.firstName.text;
+
+        newUser.lastName = UIManager.Instance.lastName.text;
+
+        newUser.phone = UIManager.Instance.phone.text;
+
+        if (DataManager.Instance.data.userInfo == null)
+            DataManager.Instance.data.userInfo = new System.Collections.Generic.Dictionary<string, User>();
+
+        DataManager.Instance.data.userInfo.Add(userID, newUser);
+
+        DataManager.Instance.DownloadData();
+    
     }
 
     public void Logout() 
@@ -302,19 +321,19 @@ public class EmailPassLogin : MonoBehaviour
 
         StartCoroutine(LoadingScreenWithTime(2));
 
-        UIManager.SetMainAppPanel(false);
+        UIManager.Instance.SetMainAppPanel(false);
 
-        UIManager.SetLogInPanel(true);
+        UIManager.Instance.SetLogInPanel(true);
 
     }
 
     IEnumerator LoadingScreenWithTime(int seconds) 
     {
-        UIManager.SetLoadingScreen(true);
+        UIManager.Instance.SetLoadingScreen(true);
 
         yield return new WaitForSeconds(seconds);
 
-        UIManager.SetLoadingScreen(false);
+        UIManager.Instance.SetLoadingScreen(false);
 
     }
 }

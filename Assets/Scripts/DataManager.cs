@@ -1,29 +1,44 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Collections;
 using Firebase.Database;
+using Newtonsoft.Json;
 using Firebase.Auth;
-using System.Net;
+using UnityEngine;
+using System.IO;
+using System;
+using UnityEngine.Events;
 
 
 public class DataManager : MonoBehaviour
 {
-    public static SavedData data;
+    public static DataManager Instance;
 
-    DatabaseReference databaseRef;
+    public SavedData data;
+
+    private DatabaseReference databaseRef;
+
 
     private void Awake()
     {
+
         databaseRef = FirebaseDatabase.DefaultInstance.RootReference;
+
+        data = new SavedData();
+
+        Instance = this;
+
+        DownloadData();
+
+
     }
 
     public void UploadData() 
     {
-        string userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        string json = JsonConvert.SerializeObject(data);
 
-        string json = JsonUtility.ToJson(data);
+        databaseRef.SetRawJsonValueAsync(json);
 
-        databaseRef.Child("users").Child(userId).SetRawJsonValueAsync(json);
+        Debug.Log(json);
     }
 
     public void DownloadData() 
@@ -35,11 +50,9 @@ public class DataManager : MonoBehaviour
     {
         string userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
 
-        var serverData = databaseRef.Child("users").Child(userId).GetValueAsync();
+        var serverData = databaseRef.GetValueAsync();
 
         yield return new WaitUntil(predicate: () => serverData.IsCompleted);
-
-        print("Download completed!");
 
         DataSnapshot snapshot = serverData.Result;
 
@@ -47,39 +60,59 @@ public class DataManager : MonoBehaviour
 
         if (jsonData != null)
         {
-            data = JsonUtility.FromJson<SavedData>(jsonData);
+            data = JsonConvert.DeserializeObject<SavedData>(jsonData);
         }
         else
         {
             Debug.Log("No data has been found!");
         }
+
+        UploadData();
+
     }
 }
 
-public class Reservation 
-{
-    public int atendees, tableNo;
+public class Reservation {
 
-    public int day, month;
+    public int atendees = 0, tableNo = 0;
 
-    public int hours, minutes;
+    public int day = 0, month = 0;
 
-    public string location;
+    public int hours = 0, minutes = 0;
 
-    public string[] foodOrdered;
+    public string location = "";
 
+    public string restaurant;
+
+    public string[] foodOrder;
+
+    public int duration;
 }
 
-public class ProfileInfo {
-
+public class User
+{
     public string firstName, lastName;
 
     public string phone;
 }
-
-public class SavedData {
+public class ReservationByUserID
+{
 
     public Dictionary<string, Reservation> reservations;
+}
 
-    public ProfileInfo profileInfo = new ProfileInfo();
+public class ReservationByRestaurant
+{
+
+    public Dictionary<string, Reservation> reservations;
+}
+
+public class SavedData
+{
+
+    public Dictionary<string, ReservationByUserID> reservationByUserID;
+
+    public Dictionary<string, ReservationByRestaurant> reservationByRestaurant;
+
+    public Dictionary<string, User> userInfo;
 }
