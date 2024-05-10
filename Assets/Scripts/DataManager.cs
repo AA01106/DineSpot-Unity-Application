@@ -21,7 +21,7 @@ public class DataManager : MonoBehaviour
     {
         databaseRef = FirebaseDatabase.DefaultInstance.RootReference;
 
-
+        data = new SavedData();
 
         Instance = this;
 
@@ -43,8 +43,7 @@ public class DataManager : MonoBehaviour
 
     private IEnumerator DownloadDataEnum()
     {
-        data = new SavedData();
-
+       
         var serverData = databaseRef.GetValueAsync();
 
         yield return new WaitUntil(predicate: () => serverData.IsCompleted);
