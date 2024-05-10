@@ -2,6 +2,7 @@ using Michsky.UI.ModernUIPack;
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 
 public class UIManager : MonoBehaviour
@@ -73,6 +74,34 @@ public class UIManager : MonoBehaviour
     public TMP_InputField month, day, hours, minutes;
 
     public TMP_Text restaurantName;
+
+    public TMP_Text available;
+
+    #endregion
+
+    // Reference to all UI elements contained in reservation info panel
+    #region Reservation Info Panel
+
+    [Header("Reservation info")]
+    public TMP_Text info_TableNo;
+
+    public TMP_Text info_Atendees;
+
+    public TMP_Text info_Location;
+
+    public TMP_Text info_date, info_time;
+
+    public TMP_Text info_restaurantName;
+
+    public Button deleteButton;
+
+    #endregion
+
+
+    // Reference to all UI elements contained in account information panel
+    #region Account Information
+
+    public TMP_Text displayedName;
 
     #endregion
 
@@ -244,7 +273,7 @@ public class UIManager : MonoBehaviour
         while (Mathf.Abs(canvasGroup.alpha - endValue) >= 0.001) 
         {
             canvasGroup.alpha = Mathf.Lerp(canvasGroup.alpha, endValue, Time.deltaTime * 25);
-            
+
             yield return null;
         }
 

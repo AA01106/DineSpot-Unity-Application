@@ -7,25 +7,24 @@ using System.Collections.Generic;
 
 public class ReservationController : MonoBehaviour
 {
+    public static ReservationController Instance;
+
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     public void AddNewReservation() 
     {
-        GameObject newReservationUI = Instantiate(UIManager.Instance.reservtaionListItems);
-
-        newReservationUI.transform.SetParent( UIManager.Instance.reservationList);
-
-        newReservationUI.transform.localScale = Vector3.one;
-
-        newReservationUI.GetComponentInChildren<Button>().onClick.AddListener( () => {
-
-            UIManager.Instance.SetReservationInfoPanel(true);
-
-            UIManager.Instance.SetAccountInformationPanel(false);
-        
-        });
 
         ReservationByUserID newReservationByUserID = new ReservationByUserID();
 
+        ReservationByRestaurant newReservationByRestaurant = new ReservationByRestaurant();
+
         newReservationByUserID.reservations = new Dictionary<string, Reservation>();
+
+        newReservationByRestaurant.reservations = new Dictionary<string, Reservation>();
 
         Reservation newReservation = new Reservation();
 
@@ -50,23 +49,57 @@ public class ReservationController : MonoBehaviour
 
         newReservationByUserID.reservations.Add(key, newReservation);
 
+        newReservationByRestaurant.reservations.Add(key, newReservation);
+
         string userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+
+        DataManager.Instance.DownloadData();
 
         if (DataManager.Instance.data.reservationByUserID == null)
             DataManager.Instance.data.reservationByUserID = new Dictionary<string, ReservationByUserID>();
 
-        DataManager.Instance.data.reservationByUserID.Add(userId, newReservationByUserID);
+        if (DataManager.Instance.data.reservationByRestaurant == null)
+            DataManager.Instance.data.reservationByRestaurant = new Dictionary<string, ReservationByRestaurant>();
+
+        if (!DataManager.Instance.data.reservationByUserID.TryAdd(userId, newReservationByUserID)) 
+        {
+            if (!DataManager.Instance.data.reservationByUserID[userId].reservations.TryAdd(key, newReservation))
+            {
+                UIManager.Instance.available.text = "Table is not available!";
+
+            }
+        }
+
+        if (!DataManager.Instance.data.reservationByRestaurant.TryAdd(newReservation.restaurant, newReservationByRestaurant))
+        {
+            DataManager.Instance.data.reservationByUserID[newReservation.restaurant].reservations.Add(key, newReservation);
+        }
 
         DataManager.Instance.UploadData();
+
+        UIManager.Instance.SetMakeReservationPanel(false);
+
+        UIManager.Instance.SetRestaurantListPanel(true);
+
+        UIContentController.Instance.AddNewReservationUI(key, newReservation);
+
+        UIManager.Instance.TableNo.selectedText.text = "1";
+
+        UIManager.Instance.day.text = "";
+
+        UIManager.Instance.month.text = "";
+
+        UIManager.Instance.hours.text = "";
+
+        UIManager.Instance.minutes.text = "";
     }
 
-    public void EditReservation() 
+    public void DeleteReservation(string key) 
     {
-        
-    }
+        DataManager.Instance.databaseRef.Child("reservationByUserID").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child(key).RemoveValueAsync();
 
-    public void DeleteReservation() 
-    {
-        
+        Reservation reservation = DataManager.Instance.data.reservationByUserID[FirebaseAuth.DefaultInstance.CurrentUser.UserId].reservations[key];
+
+        DataManager.Instance.databaseRef.Child("reservationByRestaurant").Child(reservation.restaurant).Child(key).RemoveValueAsync();
     }
 }

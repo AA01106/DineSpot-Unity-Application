@@ -4,9 +4,8 @@ using Firebase.Database;
 using Newtonsoft.Json;
 using Firebase.Auth;
 using UnityEngine;
-using System.IO;
-using System;
-using UnityEngine.Events;
+using System.Xml;
+
 
 
 public class DataManager : MonoBehaviour
@@ -15,20 +14,16 @@ public class DataManager : MonoBehaviour
 
     public SavedData data;
 
-    private DatabaseReference databaseRef;
+    public DatabaseReference databaseRef;
 
-
+   
     private void Awake()
     {
-
         databaseRef = FirebaseDatabase.DefaultInstance.RootReference;
 
-        data = new SavedData();
+
 
         Instance = this;
-
-        DownloadData();
-
 
     }
 
@@ -48,7 +43,7 @@ public class DataManager : MonoBehaviour
 
     private IEnumerator DownloadDataEnum()
     {
-        string userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        data = new SavedData();
 
         var serverData = databaseRef.GetValueAsync();
 
@@ -66,9 +61,6 @@ public class DataManager : MonoBehaviour
         {
             Debug.Log("No data has been found!");
         }
-
-        UploadData();
-
     }
 }
 
@@ -84,9 +76,6 @@ public class Reservation {
 
     public string restaurant;
 
-    public string[] foodOrder;
-
-    public int duration;
 }
 
 public class User
@@ -95,6 +84,7 @@ public class User
 
     public string phone;
 }
+
 public class ReservationByUserID
 {
 
@@ -116,3 +106,4 @@ public class SavedData
 
     public Dictionary<string, User> userInfo;
 }
+
